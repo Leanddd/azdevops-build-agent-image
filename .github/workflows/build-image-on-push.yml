@@ -2,7 +2,10 @@ name: Build Image manually
 
 on:
   workflow_dispatch:
-
+      inputs:
+        imageType:
+          default: 'servercore'
+  
 jobs:
 
   build:
@@ -27,6 +30,7 @@ jobs:
 
     - name: Set up commands
       run: |
+        $imageType = "${{ github.event.inputs.imageType }}"
         $images = @("azdevops-build-agent:dev$($env:branch)-bcagent-k8s","azdevops-build-agent:dev$($env:branch)-bcagent", "azdevops-build-agent:dev$($env:branch)-coreagent", "azdevops-build-agent:dev$($env:branch)-vsceagent")
         $targets = @("ltsc2019", "2004", "ltsc2022")
         $dockerfiles = @("Dockerfile.bcagent","Dockerfile.bcagent-k8s", "Dockerfile.coreagent", "Dockerfile.vsceagent")
@@ -43,7 +47,7 @@ jobs:
           
           for ($j=0; $j -lt $targets.length; $j++){
             $currImage = "$($currBaseImage)-$($targets[$j])"
-            $buildCmd = "docker build -t $($currImage) -f $($dockerfiles[$i]) --build-arg BASE=$($targets[$j]) --build-arg AZP_TOKEN=$env:AZP_TOKEN --build-arg AZP_URL=$env:AZP_URL --isolation hyperv ."
+            $buildCmd = "docker build -t $($currImage) -f $($dockerfiles[$i]) --build-arg BASE=$($targets[$j]) --build-arg AZP_TOKEN=$env:AZP_TOKEN --build-arg AZP_URL=$env:AZP_URL --build-arg IMAGE_TYPE=$imageType --isolation hyperv ."
             $buildCmds.Add($buildCmd)
 
             $imgPushCmd = "docker push $($currImage)"
